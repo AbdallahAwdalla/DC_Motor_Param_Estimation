@@ -1,9 +1,5 @@
 #include "common.h"
-
-
-
-
-/**
+/********************************************************************************
  * Function TPM0_Init
  * \brief  Initialize TPM0 
  * REG[0  -  N] MOD 
@@ -19,8 +15,7 @@
  * Total time of period = Tc * (MOD + 1 ) = (MOD +1)/fc
  * 
  * 
- */
-
+ ***********************************************************************************/
 void TPM0_Init() {
 
 
@@ -28,24 +23,14 @@ void TPM0_Init() {
      *  ______________         ______________         ______________          
      *                |       |              |       |              |        
      *                |_______|              |_______|              |_______
+     * |<-------Period------->|
+     *  0             x      65535   (Ticks)
      * 
-     *  0             x      200   (uS)
+     * Period = (MOD + 1 ) /fc   
      * 
-     * (MOD + 1 ) /fc = 200us 
-     * 
-     * MOD = (200 * 24 ) -1
      * CnV = Depending on the duty cycle 
      * 
      * 
-     * 
-     * 
-     * PS = 0 (no pre-scaller)
-     * 
-     * period = 177 uS  = (MOD + 1)/ fc
-     * MOD + 1 = 4248
-     * MOD = 4247
-     * 
-     * CnV = 150 * 24 = 3600
      * 
      */
 
@@ -62,9 +47,17 @@ void TPM0_Init() {
 
     TPM0->SC = TPM_SC_PS(0) | TPM_SC_CMOD(01); // Set TPM0 prescaler to divide by 1 and enable TPM0 counter
 }
-
-
-
+/********************************************************************************
+ * Function set_pwm
+ * \brief  Initialize TPM0 
+ *   Change x by writing directly into CnV register 
+ *  ______________         ______________         ______________          
+ *                |       |              |       |              |        
+ *                |_______|              |_______|              |_______
+ * |<-------Period------->|
+ *  0             x      65535   (Ticks) * 
+ * 
+ ***********************************************************************************/
 void set_pwm(uint16_t in)
 {
     TPM0->CONTROLS[3U].CnV = (uint32_t)(in);

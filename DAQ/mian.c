@@ -12,14 +12,20 @@ uint16_t SelPeriod;
 
 uint16_t periodArray[5U] = {
     0U,
-    1U<<14,
-    1U<<15,
-    49151,
+    1U<<14U,
+    1U<<15U,
+    49151U,
     (1U<<16)-1U,
 };
 
 float getRPM(void);
-
+/********************************************************************************
+ * FUNCTION NAME:       vPeriodicTask
+ * \param  [in]         void*
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void vPeriodicTask(void *pvParameters)
 {
     TickType_t xLastWakeTime;
@@ -42,6 +48,13 @@ void vPeriodicTask(void *pvParameters)
         vTaskDelayUntil(&xLastWakeTime, xPeriod);
     }
 }
+/********************************************************************************
+ * FUNCTION NAME:       vPeriodicTask2
+ * \param  [in]         void*
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void vPeriodicTask2(void *pvParameters)
 {
     TickType_t xLastWakeTime;
@@ -59,7 +72,13 @@ void vPeriodicTask2(void *pvParameters)
         vTaskDelayUntil(&xLastWakeTime, xPeriod);
     }
 }
-
+/********************************************************************************
+ * FUNCTION NAME:       encoderISR
+ * \param  [in]         void
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void encoderISR(void) {
     uint32_t currentTime = SysTick->VAL;
     uint32_t elapsedTime = lastTickTime - currentTime;
@@ -72,7 +91,13 @@ void encoderISR(void) {
         encoderDirection = encoderDelta;
     }
 }
-
+/********************************************************************************
+ * FUNCTION NAME:       initEncoder
+ * \param  [in]         void
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void initEncoder(void) {
     SIM->SCGC5 |= SIM_SCGC5_PORTA_MASK; // enable GPIOA clock
     PORTA->PCR[ENCODER_A_PIN] = (PORT_PCR_MUX(1U) | PORT_PCR_PE_MASK | PORT_PCR_IRQC(9U)); // configure pins as GPIO and pull down input also interrup on rising edge 
@@ -85,17 +110,13 @@ void initEncoder(void) {
     SysTick->CTRL = SysTick_CTRL_ENABLE_Msk;
     NVIC_EnableIRQ(PORTA_IRQn);
 }
-
-// void UART0_Init(uint32_t baud_rate) {
-//     SIM->SCGC4 |= SIM_SCGC4_UART0_MASK; // Enable UART0 clock
-//     SIM->SOPT2 |= SIM_SOPT2_UART0SRC(1); // Select the clock source for UART0
-//     UART0->C2 &= ~(UART_C2_TE_MASK | UART_C2_RE_MASK); // Disable transmitter and receiver before configuring
-//     UART0->BDH = UART_BDH_SBR((SystemCoreClock / 16) / baud_rate >> 8); // Set baud rate
-//     UART0->BDL = UART_BDL_SBR((SystemCoreClock / 16) / baud_rate); // Set baud rate
-//     UART0->C1 = 0; // Configure control register 1
-//     UART0->C2 |= (UART_C2_TE_MASK | UART_C2_RE_MASK); // Enable transmitter and receiver
-// }
-
+/********************************************************************************
+ * FUNCTION NAME:       UART0_Init
+ * \param  [in]         baud_rate
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void UART0_Init(uint32_t baud_rate) {
     SIM->SCGC4 |= SIM_SCGC4_UART0_MASK; // Enable UART0 clock
     SIM->SOPT2 |= SIM_SOPT2_UART0SRC(1); // Select the MCGFLLCLK clock as the UART0 clock source
@@ -112,13 +133,13 @@ void UART0_Init(uint32_t baud_rate) {
     UART0->C1 = 0; // Configure control register 1
     UART0->C2 |= (UART_C2_RE_MASK | UART_C2_TE_MASK); // Enable transmitter and receiver
 }
-
-
-
-
-
-
-
+/********************************************************************************
+ * FUNCTION NAME:       initFreeRTOS
+ * \param  [in]         void
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void initFreeRTOS(void)
 {
     xTaskCreate(vPeriodicTask, "Periodic Task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1u, NULL);
@@ -127,13 +148,25 @@ void initFreeRTOS(void)
     vTaskStartScheduler();
 
 }
-
+/********************************************************************************
+ * FUNCTION NAME:       PORTA_IRQHandler
+ * \param  [in]         void*
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 void PORTA_IRQHandler(void) {
     encoderISR();
     NVIC_ClearPendingIRQ(PORTA_IRQn);
     PORTA->ISFR |= (1 << ENCODER_A_PIN); // clear interrupt flag
 }
-
+/********************************************************************************
+ * FUNCTION NAME:       initFreeRTOS
+ * \param  [in]         void*
+ * \param  [out]        RPM
+ * 
+ * 
+********************************************************************************/
 float getRPM(void) {
     uint32_t now = SysTick->VAL;
     uint32_t elapsedMicros = (now - lastTickTime) / (SystemCoreClock / 1000000);
@@ -142,17 +175,24 @@ float getRPM(void) {
     encoderCount = 0u;
     return rpm;
 }
-
+/********************************************************************************
+ * FUNCTION NAME:       main
+ * \param  [in]         void
+ * \param  [out]        void
+ * 
+ * 
+********************************************************************************/
 int main(void) {
-	SystemCoreClockUpdate();
-    initEncoder(); // initialize the encoder
-    UART0_Init(9600U);
-    TPM0_Init();
-    initFreeRTOS(); // initialize the encoder
 
-    while (1) {
-			counts++;
-        // do something with the RPM value, such as printing it to a display or sending it over a communication interface
-    }
+	SystemCoreClockUpdate();
+    /* Initialize incoder */
+    initEncoder(); 
+    /* Initializr UART0 for serial communication*/
+    UART0_Init(9600U);
+    /* Initialize TPM0 --> To generate PWM*/
+    TPM0_Init();
+    /* Initialize and start freeRTOS  */
+    initFreeRTOS(); 
+
     return 0;
 }
