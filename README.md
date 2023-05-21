@@ -1,5 +1,6 @@
 # DC_Motor_Param_Estimation 
 # Data Acquisition System using KL25Z4
+![image](https://github.com/AbdallahAwdalla/DC_Motor_Param_Estimation/assets/60265311/75e7ad21-0e90-41d8-82f3-83805d29b695)
 
 This code implements a Data Acquisition System using the NXP KL25Z4 microcontroller. The system measures the rotational speed of a motor using an encoder and reports the RPM over a serial interface. The system also generates a PWM signal to control the motor speed.
 
